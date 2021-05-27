@@ -25,14 +25,14 @@ import { FormController } from 'rn-auto-scroll-form';
 
 create validation using [yup](https://www.npmjs.com/package/yup)
 
-```
+```javascript
   const schema = yup.object().shape({
     email: yup.string().email().required(),
     password: yup.string().min(6).required(),
   });
 ```
 
-```
+```javascript
 <FormController
   initialValue={{email: '', password: ''}}
   validationSchema={schema}
