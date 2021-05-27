@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { TextInput } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { FormContext } from './Form';
 
 export const Field = ({ component: Component = TextInput, name, ...props }) => {
