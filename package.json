@@ -1,6 +1,6 @@
 {
   "name": "rn-auto-scroll-form",
-  "version": "0.1.1-b0.11",
+  "version": "1.0.0",
   "description": "React Native component to handle auto scroll form to error field",
   "main": "index.js",
   "scripts": {

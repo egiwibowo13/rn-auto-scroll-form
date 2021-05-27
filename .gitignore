@@ -10,3 +10,4 @@ dist
 # Dependency directory
 node_modules
 *.tgz
+examples/package-lock.json
