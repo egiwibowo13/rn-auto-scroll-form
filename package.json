@@ -1,10 +1,14 @@
 {
   "name": "rn-auto-scroll-form",
-  "version": "1.1.1",
+  "version": "1.1.5",
   "description": "React Native component to handle auto scroll form to error field",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/egiwibowo13/rn-auto-scroll-form.git"
   },
   "keywords": [
     "react-native",
@@ -13,6 +17,10 @@
   ],
   "author": "Egi Wibowo",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/egiwibowo13/rn-auto-scroll-form/issues"
+  },
+  "homepage": "https://github.com/egiwibowo13/rn-auto-scroll-form#readme",
   "devDependencies": {
     "@babel/core": "7.11.6",
     "@babel/runtime": "7.11.2",

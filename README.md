@@ -3,7 +3,8 @@
 A Simple and fully customizable to handle Form in React Native. This library inspired by [Formik](https://github.com/jaredpalmer/formik).
 
 ### Example
-![](assets/rn-auto-scroll-form.gif)
+![](https://raw.githubusercontent.com/egiwibowo13/rn-auto-scroll-form/main/assets/rn-auto-scroll-form.gif)
+
 You can check Example code in this [link](examples/App.js)
 ## Installation
 
