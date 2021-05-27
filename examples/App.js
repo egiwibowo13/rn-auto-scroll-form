@@ -13,13 +13,12 @@ import {
   StyleSheet,
   useColorScheme,
   View,
-  TextInput,
   Button,
-  Text,
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {FormController} from 'rn-auto-scroll-form';
+import {FormController, Field} from 'rn-auto-scroll-form';
+import {MyField} from './src/components/field';
 import * as yup from 'yup';
 
 const App = () => {
@@ -40,44 +39,33 @@ const App = () => {
       <FormController
         initialValue={{email: '', password: ''}}
         validationSchema={schema}
-        onSubmit={({isValid, values, firstErrAt}) => console.warn(values)}
-        render={({
-          values,
-          errors,
-          refs,
-          handleChange,
-          handleBlur,
-          handleSubmit,
-        }) => {
+        onSubmit={({isValid, values, firstErrAt}) =>
+          console.warn({isValid, values, firstErrAt})
+        }>
+        {({handleSubmit}) => {
           return (
             <View style={styles.content}>
-              <TextInput
-                ref={refs?.email}
+              <Field
+                label="Email"
+                name="email"
                 style={styles.textInput}
                 placeholder="Email"
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values?.email}
+                component={MyField}
               />
-              {!!errors.email && (
-                <Text style={styles.errText}>{errors.email}</Text>
-              )}
-              <TextInput
-                ref={refs?.password}
+              <View style={{height: 1000, width: '100%'}} />
+              <Field
+                label="Password"
+                name="password"
                 style={styles.textInput}
                 placeholder="Password"
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                value={values?.password}
+                component={MyField}
               />
-              {!!errors.password && (
-                <Text style={styles.errText}>{errors.password}</Text>
-              )}
+              <View style={{height: 1000, width: '100%'}} />
               <Button onPress={handleSubmit} title="Submit" />
             </View>
           );
         }}
-      />
+      </FormController>
     </SafeAreaView>
   );
 };

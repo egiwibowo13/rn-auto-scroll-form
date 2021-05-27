@@ -1,21 +1,39 @@
 import React, {forwardRef} from 'react';
 import {TextInput, StyleSheet, Text} from 'react-native';
+import PropTypes from 'prop-types';
 
 export const Field = forwardRef((props, ref) => {
-  const {style, error, ...otherProps} = props;
-  <>
-    <TextInput ref={ref} style={[styles.textInput, style]} {...otherProps} />
-    {!!error && <Text style={styles.errText}>{error}</Text>}
-  </>;
+  const {style, label, error, ...otherProps} = props;
+  return (
+    <>
+      <Text>{label}</Text>
+      <TextInput ref={ref} style={[styles.textInput, style]} {...otherProps} />
+      {!!error && <Text style={styles.errText}>{error}</Text>}
+    </>
+  );
 });
 
 export const MyField = props => {
   const {style, error, label, ...otherProps} = props;
-  <>
-    <Text>{label}</Text>
-    <TextInput style={[styles.textInput, style]} {...otherProps} />
-    {!!error && <Text style={styles.errText}>{error}</Text>}
-  </>;
+  return (
+    <>
+      <Text>{label}</Text>
+      <TextInput style={[styles.textInput, style]} {...otherProps} />
+      {!!error && <Text style={styles.errText}>{error}</Text>}
+    </>
+  );
+};
+
+MyField.propTypes = {
+  style: PropTypes.object,
+  error: PropTypes.string,
+  label: PropTypes.string,
+};
+
+MyField.defaultProps = {
+  style: {},
+  error: '',
+  label: '',
 };
 
 const styles = StyleSheet.create({

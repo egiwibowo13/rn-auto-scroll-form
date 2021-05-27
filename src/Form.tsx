@@ -16,7 +16,6 @@ const getPosition = (containerRef, ref, clb) => {
         ref.current.measureLayout(
             containerRef.current,
             (left, top, width, height) => {
-                console.log({left, top, width, height})
                 result = { left, top, width, height };
                 clb(result);
             },
@@ -51,7 +50,6 @@ interface FormProps<T> {
     validationSchema?: any;
     onSubmit: (params: SubmitParams<T>) => void;
     children: (context: FormContext<T>) => React.FC<T>;
-    render: (context: FormContext<T>) => React.FC<T>;
 }
 
 type ScrollableViewProps = {
@@ -130,7 +128,7 @@ function useForm<T>(
         if (!isEmpty(validationSchema)) {
             validationSchema?.validateAt(name, values).catch(function (err: any) {
                 errors[name] = err.message;
-                setErrors(errors);
+                setErrors({...errors});
             });
         }
     };
@@ -156,7 +154,7 @@ const defaultContext: FormContext<any> = {
     handleBlur: () => { },
 };
 
-const FormContext = React.createContext<FormContext<any>>(defaultContext);
+export const FormContext = React.createContext<FormContext<any>>(defaultContext);
 
 const FormProvider = FormContext.Provider;
 const FormConsumer = FormContext.Consumer;
@@ -191,8 +189,7 @@ export const FormController = (props: FormControllerProps<any>) => {
         <ScrollableView ref={controller}>
             <FormProvider
                 value={{ values, handleChange, handleSubmit, handleBlur, errors, controller, refs }}>
-
-                <FormConsumer>{context => props.render(context)}</FormConsumer>
+                <FormConsumer>{context => props.children(context)}</FormConsumer>
             </FormProvider>
         </ScrollableView>
     )
