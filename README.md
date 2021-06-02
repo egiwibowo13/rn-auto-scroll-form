@@ -18,6 +18,7 @@ You can check Example code in this [link](examples/App.js)
 - [Installation](#installation)
 - [Usage](#usage)
   + [Basic Usage](#basic-usage)
+  + [Function useFormController](#function-useformcontroller)
   + [Custom Component](#custom-component)
   + [Create Custom Wrapper Component](#create-custom-wrapper-component)
 - [API Reference](#properties)
@@ -88,6 +89,46 @@ create validation using [yup](https://www.npmjs.com/package/yup)
     );
   }}
 </FormController>
+```
+
+
+#### Function useFormController
+
+```javascript
+import { useFormController, ScrollableView, Field } from 'rn-auto-scroll-form';
+```
+
+```javascript
+  const schema = yup.object().shape({
+    email: yup.string().email().required(),
+    password: yup.string().min(6).required(),
+  });
+
+  const myform = useFormController({
+    initialValues: initialValue,
+    enableReinitialize: true,
+    validationSchema: schema,
+    onSubmit: ({isValid, values, firstErrAt}) => {
+      console.log({isValid, values, firstErrAt});
+    },
+  });
+```
+
+```javascript
+<ScrollableView ref={myform?.controller}>
+  <View style={styles.content}>
+    <Text
+      style={
+        styles.title
+      }>{`${myform?.count?.count}/${myform?.count?.total}`}</Text>
+    <Field component={MyField} label="Email" name="email" form={myform} />
+    <Field component={MyField} label="Password" name="password" form={myform} />
+
+    ...
+
+    <Button onPress={myform.handleSubmit} title="Submit" />
+  </View>
+</ScrollableView>
 ```
 
 #### Custom Component
@@ -179,6 +220,8 @@ Props
 | validateOnChange | `No` | `bool` | `false` |
 | enableReinitialize | `No` | `bool` |  `false` |
 | countRequiredOnly | `No` | `bool` | `true` |
+| autoscroll | `No` | `bool` | `true` |
+| countingFields | `No` | `Array[String]` | `null` |
 
 ### useFormController
 Params when using useFormController
@@ -187,10 +230,12 @@ type UseFormParams<T> = {
   initialValues: T;
   validationSchema: any;
   onSubmit: (params: SubmitParams<T>) => void;
-  countRequiredOnly: boolean;
-  validateOnChange: boolean;
-  validateOnBlur: boolean;
-  enableReinitialize: boolean;
+  countRequiredOnly?: boolean;
+  countingFields?: string[];
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+  enableReinitialize?: boolean;
+  autoscroll?: boolean;
 };
 ```
 params `onSubmit`

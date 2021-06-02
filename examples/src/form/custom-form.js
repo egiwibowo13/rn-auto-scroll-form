@@ -58,7 +58,6 @@ const App = () => {
     collage: '',
     password: '',
   };
-  console.log({schemaF: schema.fields.password});
 
   return (
     <SafeAreaView style={[backgroundStyle, styles.container]}>
@@ -70,7 +69,7 @@ const App = () => {
           const a = isRequired('name');
           console.warn({a});
         }}>
-        {({handleSubmit}) => {
+        {myform => {
           return (
             <View style={styles.content}>
               <Text style={styles.title}>My Form</Text>
@@ -79,64 +78,72 @@ const App = () => {
                 name="name"
                 placeholder="Input your name"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Email"
                 name="email"
                 placeholder="Input your email"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="No. Telp (optional)"
                 name="noTelp"
                 placeholder="Input your No. Telp"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Gender (optional)"
                 name="gender"
                 placeholder="Input your Gender"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Birthday"
                 name="birthday"
                 placeholder="Input your Birthday"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Address"
                 name="address"
                 placeholder="Input your address"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="City (optional)"
                 name="city"
                 placeholder="Input your city"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Region (optional)"
                 name="region"
                 placeholder="Input your region"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Collage (optional)"
                 name="collage"
                 placeholder="Input your collage"
                 component={MyField}
+                form={myform}
               />
               <Field
                 label="Password"
                 name="password"
                 placeholder="Input your password"
                 component={MyField}
+                form={myform}
               />
-              <View style={{height: 100, width: '100%'}} />
-              <Button onPress={handleSubmit} title="Submit" />
-              <View style={{height: 50, width: '100%'}} />
+              <Button onPress={myform.handleSubmit} title="Submit" />
             </View>
           );
         }}

@@ -1,16 +1,19 @@
-import React, {useContext} from 'react';
+import React from 'react';
 import {TextInput, View} from 'react-native';
-import {FormContext} from './Form';
 
-export const Field = ({component: Component = TextInput, name, ...props}) => {
-  const ctx = useContext(FormContext);
+export const Field = ({
+  component: Component = TextInput,
+  name,
+  form,
+  ...props
+}) => {
   return (
-    <View style={{width: '100%'}} ref={ctx?.refs[name]}>
+    <View style={{width: '100%'}} ref={form?.refs[name]}>
       <Component
-        value={ctx?.values[name]}
-        error={ctx?.errors[name]}
-        onChangeText={ctx?.handleChange(name)}
-        onBlur={ctx.handleBlur(name)}
+        value={form?.values[name]}
+        error={form?.errors[name]}
+        onChangeText={form?.handleChange(name)}
+        onBlur={form?.handleBlur(name)}
         {...props}
       />
     </View>

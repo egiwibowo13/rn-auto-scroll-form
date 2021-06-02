@@ -39,10 +39,12 @@ type UseFormParams<T> = {
   initialValues: GenericObj<T>;
   validationSchema: any;
   onSubmit: (params: SubmitParams<T>) => void;
-  countRequiredOnly: boolean;
-  validateOnChange: boolean;
-  validateOnBlur: boolean;
-  enableReinitialize: boolean;
+  countRequiredOnly?: boolean;
+  validateOnChange?: boolean;
+  validateOnBlur?: boolean;
+  enableReinitialize?: boolean;
+  autoscroll?: boolean;
+  countingFields?: string[];
 };
 
 type FormProps<T> = {
@@ -59,8 +61,11 @@ function useCount(
   validationSchema: any,
   fieldList: string[],
   countRequiredOnly: boolean,
+  countingFields?: string[],
 ) {
-  const allFields = countRequiredOnly
+  const allFields = Array.isArray(countingFields)
+    ? countingFields
+    : countRequiredOnly
     ? getRequiredFields(validationSchema, fieldList)
     : fieldList;
   const totalCount = allFields?.length;
@@ -98,10 +103,12 @@ export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
     initialValues,
     validationSchema,
     onSubmit,
-    countRequiredOnly,
-    validateOnChange,
-    validateOnBlur,
-    enableReinitialize,
+    countRequiredOnly = true,
+    validateOnChange = false,
+    validateOnBlur = true,
+    enableReinitialize = false,
+    autoscroll = true,
+    countingFields = null,
   } = params;
 
   const [values, setValues] = React.useState<GenericObj<T>>(initialValues);
@@ -119,6 +126,7 @@ export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
     validationSchema,
     fieldList,
     countRequiredOnly,
+    countingFields,
   );
 
   const handleChange = (name: string) => (value: string) => {
@@ -141,6 +149,12 @@ export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
     }
   };
 
+  const scrollToErrorField = (firstErrAt: string) => {
+    if (autoscroll) {
+      controller.current.scrollToView(refs.current[firstErrAt]);
+    }
+  };
+
   const handleSubmit = () => {
     if (hasValidation) {
       try {
@@ -149,7 +163,7 @@ export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
       } catch (err) {
         const firstErrAt = getFiersError(fieldList, err.inner);
         onSubmit({isValid: false, values, firstErrAt});
-        controller.current.scrollToView(refs.current[firstErrAt]);
+        scrollToErrorField(firstErrAt);
         err.inner.forEach((e: any) => {
           errors[e.path] = e.message;
           setErrors({...errors});
@@ -214,7 +228,7 @@ export const FormContext =
 const FormProvider = FormContext.Provider;
 const FormConsumer = FormContext.Consumer;
 
-class ScrollableView extends React.Component<ScrollableViewProps> {
+export class ScrollableView extends React.Component<ScrollableViewProps> {
   private target: React.RefObject<ScrollView> = React.createRef(); // or some other type of Component
   constructor(props: ScrollableViewProps) {
     super(props);
@@ -241,6 +255,8 @@ export const FormController = (props: FormControllerProps<any>) => {
     validateOnChange: props.validateOnChange,
     validateOnBlur: props.validateOnBlur,
     enableReinitialize: props.enableReinitialize,
+    autoscroll: props.autoscroll,
+    countingFields: props.countingFields,
   });
 
   const {
@@ -277,5 +293,8 @@ FormController.defaultProps = {
   validateOnChange: false,
   validateOnBlur: true,
   countRequiredOnly: true,
+  countingFields: null,
   enableReinitialize: false,
+  validationSchema: null,
+  autoscroll: true,
 };
