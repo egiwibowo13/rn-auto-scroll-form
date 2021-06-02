@@ -18,44 +18,12 @@ import {
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {FormController, Field} from './lib';
-import {MyField} from './src/components/field';
+import {FormController, Field} from 'rn-auto-scroll-form';
+import {MyField} from '../components/field';
 import * as yup from 'yup';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const initlValue = {
-    name: 'n',
-    email: '',
-    noTelp: '',
-    gender: '',
-    birthday: '',
-    address: '',
-    city: '',
-    region: '',
-    collage: '',
-    password: '',
-  };
-  const [initialValue, setInitialValue] = React.useState(initlValue);
-
-  React.useEffect(() => {
-    setTimeout(() => {
-      setInitialValue({
-        ...{
-          name: 'name',
-          email: '',
-          noTelp: '',
-          gender: '',
-          birthday: '',
-          address: '',
-          city: '',
-          region: '',
-          collage: '',
-          password: '',
-        },
-      });
-    }, 1000);
-  }, []);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -77,25 +45,35 @@ const App = () => {
   function isRequired(field) {
     return schema.fields[field]?.exclusiveTests?.required || false;
   }
+
+  const initialValue = {
+    name: '',
+    email: '',
+    noTelp: '',
+    gender: '',
+    birthday: '',
+    address: '',
+    city: '',
+    region: '',
+    collage: '',
+    password: '',
+  };
   console.log({schemaF: schema.fields.password});
 
   return (
     <SafeAreaView style={[backgroundStyle, styles.container]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <FormController
-        initialValues={initialValue}
+        initialValue={initialValue}
         validationSchema={schema}
-        enableReinitialize={true}
         onSubmit={({isValid, values, firstErrAt}) => {
           const a = isRequired('name');
           console.warn({a});
         }}>
-        {({handleSubmit, count}) => {
+        {({handleSubmit}) => {
           return (
             <View style={styles.content}>
               <Text style={styles.title}>My Form</Text>
-              <Text
-                style={styles.title}>{`${count?.count}/${count?.total}`}</Text>
               <Field
                 label="Name"
                 name="name"

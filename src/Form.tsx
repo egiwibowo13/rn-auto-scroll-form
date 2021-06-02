@@ -1,197 +1,281 @@
-import React, { useRef } from 'react';
-import { ScrollView, ScrollViewProps } from 'react-native';
+import React, {useRef} from 'react';
+import {ScrollView, ScrollViewProps} from 'react-native';
+import {
+  getPosition,
+  getFiersError,
+  createFormRefs,
+  getRequiredFields,
+  checkHaveValidation,
+  isEmpty,
+} from './helper';
 
-function isEmpty(value) {
-    return (
-        value === null ||
-        value === undefined ||
-        String(value).trim() === '' ||
-        (Object.keys(value).length === 0 && value.constructor === Object)
-    );
+interface Count {
+  count: number;
+  total: number;
 }
 
-const getPosition = (containerRef, ref, clb) => {
-    let result = { top: 0, left:0, width: 0, height: 0 }
-    if (ref.current && containerRef.current) {
-        ref.current.measureLayout(
-            containerRef.current,
-            (left, top, width, height) => {
-                result = { left, top, width, height };
-                clb(result);
-            },
-        );
-    } else {
-        throw Error('please check your "containerRef" and "ref"');
-    }
-};
-
 interface FormContext<T> {
-    values: GenericObj<T>;
-    errors?: GenericObj<T>;
-    refs?: GenericObj<T>;
-    controller: React.Ref<ScrollableView>;
-    handleChange: (txt: string) => void;
-    handleBlur: (txt: string) => void;
-    handleSubmit: (refs: GenericObj<T>) => void;
+  values: GenericObj<T>;
+  errors?: GenericObj<T>;
+  count: Count;
+  refs?: GenericObj<T>;
+  controller: React.Ref<ScrollableView>;
+  handleChange: (txt: string) => void;
+  handleBlur: (txt: string) => void;
+  handleSubmit: (refs: GenericObj<T>) => void;
 }
 
 type GenericObj<T> = {
-    [P in keyof T]?: T[P];
+  [P in keyof T]?: T[P];
 };
 
 type SubmitParams<T> = {
-    isValid: boolean;
-    values: GenericObj<T>;
-    firstErrAt?: string | null
-}
+  isValid: boolean;
+  values: GenericObj<T>;
+  firstErrAt?: string | null;
+};
 
-interface FormProps<T> {
-    initialValue: T;
-    validationSchema?: any;
-    onSubmit: (params: SubmitParams<T>) => void;
-    children: (context: FormContext<T>) => React.FC<T>;
-}
+type UseFormParams<T> = {
+  initialValues: GenericObj<T>;
+  validationSchema: any;
+  onSubmit: (params: SubmitParams<T>) => void;
+  countRequiredOnly: boolean;
+  validateOnChange: boolean;
+  validateOnBlur: boolean;
+  enableReinitialize: boolean;
+};
+
+type FormProps<T> = {
+  children: (context: FormContext<T>) => React.FC<T>;
+} & UseFormParams<T>;
 
 type ScrollableViewProps = {
   children: React.ReactNode;
 } & ScrollViewProps;
 
-type FormControllerProps<T> = FormProps<T> & ScrollableViewProps;
+export type FormControllerProps<T> = FormProps<T>;
 
-export const createFormRefs = (initialValue = {}) => {
-    let refs = {};
-    const fieldList = Object.keys(initialValue);
-    for (let index = 0; index < fieldList.length; index += 1) {
-        const name = fieldList[index];
-        refs[name] = React.createRef();
+function useCount(
+  validationSchema: any,
+  fieldList: string[],
+  countRequiredOnly: boolean,
+) {
+  const allFields = countRequiredOnly
+    ? getRequiredFields(validationSchema, fieldList)
+    : fieldList;
+  const totalCount = allFields?.length;
+
+  const [validFields, setValidField] = React.useState([]);
+
+  const addValidField = fieldName => {
+    const validFieldToCounting = allFields.indexOf(fieldName) > -1;
+    const dontHasFieldName = validFields.indexOf(fieldName) <= -1;
+    if (dontHasFieldName && validFieldToCounting) {
+      validFields.push(fieldName);
+      setValidField([...validFields]);
     }
-    return refs;
+  };
+
+  const delValidField = fieldName => {
+    const validFieldToCounting = allFields.indexOf(fieldName) > -1;
+    const index = validFields.indexOf(fieldName);
+    if (index > -1 && validFieldToCounting) {
+      validFields.splice(index, 1);
+      setValidField([...validFields]);
+    }
+  };
+
+  return {
+    totalCount,
+    count: validFields.length,
+    addValidField,
+    delValidField,
+  };
 }
 
-function useForm<T>(
-    initialValues: GenericObj<T>,
-    validationSchema: any,
-    onSubmit: (params: SubmitParams<T>) => void,
-): FormContext<T> {
-    const [values, setValues] = React.useState<GenericObj<T>>(initialValues);
-    const [errors, setErrors] = React.useState({});
+export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
+  const {
+    initialValues,
+    validationSchema,
+    onSubmit,
+    countRequiredOnly,
+    validateOnChange,
+    validateOnBlur,
+    enableReinitialize,
+  } = params;
 
-    const refsResult = createFormRefs(initialValues);
-    const refs = useRef(refsResult);
+  const [values, setValues] = React.useState<GenericObj<T>>(initialValues);
+  const [errors, setErrors] = React.useState({});
 
-    const fieldList = Object.keys(initialValues);
-    const controller: React.Ref<ScrollableView> = React.createRef();
+  const refsResult = createFormRefs(initialValues);
+  const refs = useRef(refsResult);
 
-    const handleChange = (name: string) => (value: string) => {
+  const hasValidation = checkHaveValidation(validationSchema);
+
+  const fieldList = Object.keys(initialValues);
+  const controller: React.Ref<ScrollableView> = React.createRef();
+
+  const countProgress = useCount(
+    validationSchema,
+    fieldList,
+    countRequiredOnly,
+  );
+
+  const handleChange = (name: string) => (value: string) => {
+    if (hasValidation && validateOnChange) {
+      try {
         values[name] = value;
-        errors[name] = null;
-        setValues({ ...values });
-        setErrors({ ...errors });
-    };
+        setValues({...values});
+        validationSchema?.validateSyncAt(name, values);
+        countProgress.addValidField(name);
+      } catch (err) {
+        countProgress.delValidField(name);
+        errors[name] = err.message;
+        setErrors({...errors});
+      }
+    } else {
+      values[name] = value;
+      errors[name] = null;
+      setValues({...values});
+      setErrors({...errors});
+    }
+  };
 
-    const getFiersError = (errInner = []) => {
-        let firstErrAt = null;
-        for (let field of fieldList) {
-            const isError = errInner.findIndex((e: any) => e.path === field) > -1;
-            if (isError) {
-                firstErrAt = field;
-                break;
-            }
-        }
-        return firstErrAt;
-    };
+  const handleSubmit = () => {
+    if (hasValidation) {
+      try {
+        validationSchema?.validateSync(values, {abortEarly: false});
+        onSubmit({isValid: true, values, firstErrAt: null});
+      } catch (err) {
+        const firstErrAt = getFiersError(fieldList, err.inner);
+        onSubmit({isValid: false, values, firstErrAt});
+        controller.current.scrollToView(refs.current[firstErrAt]);
+        err.inner.forEach((e: any) => {
+          errors[e.path] = e.message;
+          setErrors({...errors});
+        });
+      }
+    } else {
+      onSubmit({isValid: true, values, firstErrAt: null});
+    }
+  };
 
-    const handleSubmit = () => {
-        if (!isEmpty(validationSchema)) {
-            const isValid = validationSchema?.isValidSync(values);
-            if (isValid) {
-                onSubmit({isValid, values, firstErrAt: null});
-            } else {
-                validationSchema
-                    ?.validate(values, { abortEarly: false })
-                    .catch(function (err: any) {
-                        const firstErrAt = getFiersError(err.inner);
-                        onSubmit({isValid, values, firstErrAt});
-                        controller.current.scrollToView(refs.current[firstErrAt]);
-                        err.inner.forEach((e: any) => {
-                            errors[e.path] = e.message;
-                            setErrors({ ...errors });
-                        });
-                    });
-            }
-        } else {
-            onSubmit({isValid: true, values, firstErrAt: null});
-        }
-    };
+  const handleBlur = (name: string) => () => {
+    if (hasValidation && validateOnBlur && !validateOnChange) {
+      try {
+        validationSchema?.validateSyncAt(name, values);
+        countProgress.addValidField(name);
+      } catch (err) {
+        countProgress.delValidField(name);
+        errors[name] = err.message;
+        setErrors({...errors});
+      }
+    }
+  };
 
-    const handleBlur = (name: string) => () => {
-        if (!isEmpty(validationSchema)) {
-            validationSchema?.validateAt(name, values).catch(function (err: any) {
-                errors[name] = err.message;
-                setErrors({...errors});
-            });
-        }
-    };
+  React.useEffect(() => {
+    if (enableReinitialize && !isEmpty(initialValues)) {
+      setValues({...initialValues});
+    }
+  }, [enableReinitialize, initialValues]);
 
-    return {
-        values,
-        errors,
-        controller,
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        refs: refs.current
-    };
+  return {
+    values,
+    errors,
+    count: {
+      count: countProgress.count,
+      total: countProgress.totalCount,
+    },
+    controller,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    refs: refs.current,
+  };
 }
 
 const defaultContext: FormContext<any> = {
-    values: {},
-    errors: {},
-    refs: {},
-    controller: { current: null },
-    handleChange: () => { },
-    handleSubmit: () => { },
-    handleBlur: () => { },
+  values: {},
+  errors: {},
+  count: {
+    count: 0,
+    total: 0,
+  },
+  refs: {},
+  controller: {current: null},
+  handleChange: () => {},
+  handleSubmit: () => {},
+  handleBlur: () => {},
 };
 
-export const FormContext = React.createContext<FormContext<any>>(defaultContext);
+export const FormContext =
+  React.createContext<FormContext<any>>(defaultContext);
 
 const FormProvider = FormContext.Provider;
 const FormConsumer = FormContext.Consumer;
 
 class ScrollableView extends React.Component<ScrollableViewProps> {
-    private target: React.RefObject<ScrollView> = React.createRef(); // or some other type of Component
-    constructor(props: ScrollableViewProps) {
-        super(props)
-    }
+  private target: React.RefObject<ScrollView> = React.createRef(); // or some other type of Component
+  constructor(props: ScrollableViewProps) {
+    super(props);
+  }
 
-    public  async scrollToView(childRef) {
-        getPosition(this.target, childRef, ({left, top, width, height}) => {
-            this.target.current.scrollTo({ x: left, y: top, animated: true });
-        });
-    
-    }
+  public async scrollToView(childRef) {
+    getPosition(this.target, childRef, ({left, top}) => {
+      this.target.current.scrollTo({x: left, y: top, animated: true});
+    });
+  }
 
-    render() {
-        const { children } = this.props;
-        return <ScrollView ref={this.target}>{children}</ScrollView>;
-    }
+  render() {
+    const {children} = this.props;
+    return <ScrollView ref={this.target}>{children}</ScrollView>;
+  }
 }
 
 export const FormController = (props: FormControllerProps<any>) => {
-    const { values, handleChange, handleSubmit, handleBlur, errors, controller, refs } = useForm(
-        props.initialValue,
-        props.validationSchema,
-        props.onSubmit,
-    );
+  const form = useFormController({
+    initialValues: props.initialValues,
+    validationSchema: props.validationSchema,
+    onSubmit: props.onSubmit,
+    countRequiredOnly: props.countRequiredOnly,
+    validateOnChange: props.validateOnChange,
+    validateOnBlur: props.validateOnBlur,
+    enableReinitialize: props.enableReinitialize,
+  });
 
-    return (
-        <ScrollableView ref={controller}>
-            <FormProvider
-                value={{ values, handleChange, handleSubmit, handleBlur, errors, controller, refs }}>
-                <FormConsumer>{context => props.children(context)}</FormConsumer>
-            </FormProvider>
-        </ScrollableView>
-    )
+  const {
+    values,
+    handleChange,
+    handleSubmit,
+    handleBlur,
+    errors,
+    controller,
+    refs,
+    count,
+  } = form;
+
+  return (
+    <ScrollableView ref={controller}>
+      <FormProvider
+        value={{
+          values,
+          handleChange,
+          handleSubmit,
+          handleBlur,
+          errors,
+          controller,
+          refs,
+          count,
+        }}>
+        <FormConsumer>{context => props.children(context)}</FormConsumer>
+      </FormProvider>
+    </ScrollableView>
+  );
 };
 
+FormController.defaultProps = {
+  validateOnChange: false,
+  validateOnBlur: true,
+  countRequiredOnly: true,
+  enableReinitialize: false,
+};

@@ -6,22 +6,36 @@ A Simple and fully customizable to handle Form in React Native. This library ins
 ![](https://raw.githubusercontent.com/egiwibowo13/rn-auto-scroll-form/main/assets/rn-auto-scroll-form.gif)
 
 You can check Example code in this [link](examples/App.js)
+
+## Features
+- Auto scroll to first error field
+- Manage, track state & values of fields
+- Supports validations using [yup](https://www.npmjs.com/package/yup)
+- Supports custom components
+
+## Getting Started
+
+- [Installation](#installation)
+- [Usage](#usage)
+  + [Basic Usage](#basic-usage)
+  + [Custom Component](#custom-component)
+  + [Create Custom Wrapper Component](#create-custom-wrapper-component)
+- [API Reference](#properties)
+  + [FormController](#formcontroller)
+  + [useFormController](#useformcontroller)
+  + [FormContext](#formcontroller)
+  + [Field](#field)
+- [Example](#example)
+
 ## Installation
-
-If using yarn:
-
-```
-yarn add rn-auto-scroll-form
-```
-
-If using npm:
+you can install using npm:
 
 ```
 npm i rn-auto-scroll-form
 ```
 
 ## Usage
-#### Basic
+#### Basic Usage
 
 ```javascript
 import { FormController } from 'rn-auto-scroll-form';
@@ -150,6 +164,72 @@ export const YourWrapField = ({ component: Component, name, ...props }) => {
     )
 }
 ```
+
+
+### API Reference
+### FormController
+Props
+
+| Property | Required | Type | Default |
+| :------------ |:---------------:| :---------------:| :-----|
+| children | `yes` | `((context: FormContext) => React.ReactNode)` | - |
+| initialValues | `yes` | `Values` | - |
+| validationSchema | `No` | `Schema | (() => Schema)` | `null` |
+| validateOnBlur | `No` | `bool` | `true` |
+| validateOnChange | `No` | `bool` | `false` |
+| enableReinitialize | `No` | `bool` |  `false` |
+| countRequiredOnly | `No` | `bool` | `true` |
+
+### useFormController
+Params when using useFormController
+```javascript
+type UseFormParams<T> = {
+  initialValues: T;
+  validationSchema: any;
+  onSubmit: (params: SubmitParams<T>) => void;
+  countRequiredOnly: boolean;
+  validateOnChange: boolean;
+  validateOnBlur: boolean;
+  enableReinitialize: boolean;
+};
+```
+params `onSubmit`
+
+```javascript
+type SubmitParams<T> = {
+  isValid: boolean;
+  values: GenericObj<T>;
+  firstErrAt?: string | null;
+};
+```
+
+### FormContext
+Form Context
+```javascript
+interface FormContext<T> {
+  values: T;
+  errors?: T;
+  count: Count;
+  refs?: T;
+  controller: React.Ref<ScrollableView>;
+  handleChange: (txt: string) => void;
+  handleBlur: (txt: string) => void;
+  handleSubmit: (refs: T) => void;
+}
+
+interface Count {
+  count: number;
+  total: number;
+}
+```
+
+### Field
+you can use TextInputProps at Field Component
+
+| Property | Required | Type |
+| :------------ |:---------------:| :---------------:|
+| name | `yes` | `string` |
+
 
 
 ## Contributing

@@ -11,3 +11,4 @@ dist
 node_modules
 *.tgz
 examples/package-lock.json
+examples/lib
