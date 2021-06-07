@@ -14,7 +14,7 @@ interface Count {
   total: number;
 }
 
-interface FormContext<T> {
+export interface FormContextParams<T> {
   values: GenericObj<T>;
   errors?: GenericObj<T>;
   count: Count;
@@ -35,7 +35,7 @@ type SubmitParams<T> = {
   firstErrAt?: string | null;
 };
 
-type UseFormParams<T> = {
+export type UseFormParams<T> = {
   initialValues: GenericObj<T>;
   validationSchema: any;
   onSubmit: (params: SubmitParams<T>) => void;
@@ -48,10 +48,10 @@ type UseFormParams<T> = {
 };
 
 type FormProps<T> = {
-  children: (context: FormContext<T>) => React.FC<T>;
+  children: (context: FormContextParams<T>) => React.FC<T>;
 } & UseFormParams<T>;
 
-type ScrollableViewProps = {
+export type ScrollableViewProps = {
   children: React.ReactNode;
 } & ScrollViewProps;
 
@@ -98,7 +98,7 @@ function useCount(
   };
 }
 
-export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
+export function useFormController<T>(params: UseFormParams<T>): FormContextParams<T> {
   const {
     initialValues,
     validationSchema,
@@ -208,7 +208,7 @@ export function useFormController<T>(params: UseFormParams<T>): FormContext<T> {
   };
 }
 
-const defaultContext: FormContext<any> = {
+const defaultContext: FormContextParams<any> = {
   values: {},
   errors: {},
   count: {
@@ -223,7 +223,7 @@ const defaultContext: FormContext<any> = {
 };
 
 export const FormContext =
-  React.createContext<FormContext<any>>(defaultContext);
+  React.createContext<FormContextParams<any>>(defaultContext);
 
 const FormProvider = FormContext.Provider;
 const FormConsumer = FormContext.Consumer;
@@ -246,7 +246,7 @@ export class ScrollableView extends React.Component<ScrollableViewProps> {
   }
 }
 
-export const FormController = (props: FormControllerProps<any>) => {
+export function FormController<T>(props: FormControllerProps<T>) {
   const form = useFormController({
     initialValues: props.initialValues,
     validationSchema: props.validationSchema,

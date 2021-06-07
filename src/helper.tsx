@@ -1,4 +1,5 @@
 import React from 'react';
+import {findNodeHandle} from 'react-native';
 
 export function isEmpty(value) {
   return (
@@ -13,7 +14,7 @@ export const getPosition = (containerRef, ref, clb) => {
   let result = {top: 0, left: 0, width: 0, height: 0};
   if (ref.current && containerRef.current) {
     ref.current.measureLayout(
-      containerRef.current,
+      findNodeHandle(containerRef.current),
       (left, top, width, height) => {
         result = {left, top, width, height};
         clb(result);
